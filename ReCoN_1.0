@@ -1,0 +1,200 @@
+import itertools
+import random
+import networkx
+import pylab as plt
+from networkx import *
+import os
+os.getcwd()
+from networkx.algorithms.community import *
+import matplotlib.pyplot as plt
+import math
+from networkx.utils import py_random_state
+
+import networkx as nx
+##############################################################################
+def edge_swap_4(G, nswap, max_tries=10000000, seed=None, ): #4 point of algorithm ReCoN
+   
+    if G.is_directed():
+        raise nx.NetworkXError(
+            "edge_swap_4() not defined for directed graphs.")
+    if nswap > max_tries:
+        raise nx.NetworkXError("Number of swaps > number of tries allowed.")
+    if len(G) < 4:
+        raise nx.NetworkXError("Graph has less than four nodes.")
+    n = 0
+    swapcount = 0
+    
+    discrete_sequence = nx.utils.discrete_sequence
+    while swapcount < nswap:
+       
+        
+        u = random.choice(list(G.nodes()))
+        x = random.choice(list(G.nodes()))
+  
+        if u == x:
+            continue  # same source, skip
+      
+        # choose target uniformly from neighbors
+        v = random.choice(list(G[u]))
+        y = random.choice(list(G[x]))
+       
+        if v == y or u ==v or x==y:
+            continue  # same target, skip
+        if same_co(u,x):
+            continue #same community
+        if same_co(v,y):
+            continue #same community                
+        if (x not in G[u]) and (y not in G[v]):  # don't create parallel edges
+           
+            G.add_edge(u, x)
+            G.add_edge(v, y)
+            G.remove_edge(u, v)
+            G.remove_edge(x, y)
+            swapcount += 1
+        
+        if n >= max_tries:
+            e = ('Maximum number of swap attempts (%s) exceeded ' % n +
+                 'before desired swaps achieved (%s).' % nswap)
+            raise nx.NetworkXAlgorithmError(e)
+        n += 1
+    return G
+
+
+
+
+
+#############################################################################################################################################################
+def edge_swap_3( G, seed=None ): #3 point of algorithm ReCoN
+   
+    if G.is_directed():
+        raise nx.NetworkXError("edge_swap_4() not defined for directed graphs.")
+    if len(G) < 4:
+        raise nx.NetworkXError("Graph has less than four nodes.")
+    n = 0
+    u=0
+    x=0
+    swapcount = 0
+    pi=0
+        
+    j=0
+        
+    for i in Com:
+        lim = len(list(H.predecessors(i)))
+        swapcount = 0
+        tries = 0
+            
+        while (swapcount<lim*10)and(tries<lim*100):
+            S = list(H.predecessors(i))
+                  
+            x = random.choice(S)
+            u = random.choice(S)
+            tries = tries + 1    
+            n = n + 1       
+            if u == x:
+                continue  # same source, skip
+                
+            # choose target uniformly from neighbors
+            if len(list(set(S) & set(G[u])))==0 or  len(list(set(S) & set(G[x])))==0 :
+                continue
+            v = random.choice(list(set(S) & set(G[u])))
+            y = random.choice(list(set(S) & set(G[x])))
+               
+            
+            if v == y or u ==v or x==y:
+                continue  # same target, skip
+                       
+            if (x not in G[u]) and (y not in G[v]):  # don't create parallel edges
+                G.add_edge(u, x)
+                G.add_edge(v, y)
+                G.remove_edge(u, v)
+                G.remove_edge(x, y)
+                swapcount += 1
+            if edg!=G.number_of_edges()and pi!=1 :
+                print('u=',u,'x= ',x,'v= ',v,'y= ',y,'edg= ',edg,'Gedg=',G.number_of_edges(),'S= ',S,'G[u]=',G[u],'G[y]=',G[y])
+                pi=1
+        i = i + 1    
+    j = j + 1
+    return G        
+        
+    
+            
+         
+#################################################################################################################################################
+def m(x):
+    return H[int(x) % nod] #number of community for original node
+
+
+def n(x):
+    return int(x) // nod #number of copy
+
+def same_co(x,y): #is x and y in the same community
+    if (m(y)== m(x)) and (n(y) == n(x)):
+        return True
+    else:
+        return False
+#################################################################################################################################################
+
+
+####### 1 Read and save graph  T with Detected  community H
+print("Start read")
+T = read_edgelist("email_graph.txt",nodetype = int)
+H = nx.read_weighted_edgelist("email_labels.txt", create_using=nx.DiGraph(), nodetype = int)
+print("end read")
+
+
+
+######## 2.Generate graph G  as the disjoint union of x copies of T 
+G = T
+print(G.number_of_edges())
+comm = 42
+nod = G.number_of_nodes()
+edg = G.number_of_edges()
+print ("number of edges before copy = ",G.number_of_edges(mplementation of ReCoN algorithm. Generating Scaled Replicas of Real-World Complex Networks))
+i = 1 
+x=2 #number of copy
+
+while i < x:
+     G = nx.disjoint_union(G,T)
+     i=i+1
+C = H
+#Add all nodes to H
+i=0
+while i<x:
+    j=0
+    while j<nod:
+        H.add_node(j+i*nod)
+       
+        j=j+1
+    i=i+1
+i=0
+Com=list()
+#Add all edges to H
+while i<x:
+    j=0
+    while j<nod:
+        H.add_edges_from([(j+i*nod, list(C[j])[0]+i*nod)])
+        j=j+1
+    i=i+1    
+i=0		
+#Create list of Communities
+while i<x:
+    j=0
+    while j<comm:
+        Com.append(j+i*nod)
+        j=j+1
+    i=i+1
+
+
+
+
+#########3 and 4. randomize the edges while keeping the degree distribution using random edge switches.
+print("number of edges after copy = ",G.number_of_edges())
+print("star swaping")
+edg = G.number_of_edges()
+edge_swap_3(G)
+
+print("end of 3 point")
+edge_swap_4(G,nod * 10)
+print("okey")
+
+
